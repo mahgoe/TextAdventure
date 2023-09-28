@@ -7,9 +7,15 @@ public class GameLogic {
     static Player player;
     public static boolean isRunning;
 
+    //random encounters
+    public static String[] encounters = {"Battle", "Battle", "Battle", "Rest", "Rest", "Rest"};
+
+    //enemy names
+    public static String[] enemies = {"Orge", "Orge", "Dark Mage", "Goblin", "Goblin Knight" };
+
     //Story elements
-    public static int place = 0, act;
-    public static String[] places = {"Wandering Plains", " Eldoria Town Square", "The Hidden Sanctuary, Forbidden Woods", "Outskirts of the Caverns of Desolation", " Shadow Valley", "Oracle's Temple atop Luminara Peak"};
+    public static int place = 0, act = 1;
+    public static String[] places = {"Wandering Plains", " Eldoria Town Square", "The Hidden Sanctuary, Draken's Frontier Fortress"};
 
     // method to get user input from console
     public static int readInt(String prompt, int userChoices) {
@@ -97,9 +103,73 @@ public class GameLogic {
         gameLoop();
     }
 
+    //method that changes the games values based on player xp
+    public static void checkAct(){
+        if(player.xp >= 10 && act == 1){
+            //increment act and place
+            act = 2;
+            place = 1;
+            //Story
+            Story.printFirstOutro();
+            //level the player up
+            player.chooseTrait();
+            //Story
+            Story.printSecondIntro();
+        }else if(player.xp >= 50 && act == 2){
+            act = 3;
+            place = 2;
+            Story.printSecondOutro();
+            player.chooseTrait();
+            Story.printThirdIntro();
+            //assign new values to enemies
+            enemies[0] = "Evil Mercenary";
+            enemies[1] = "Goblin";
+            enemies[2] = "Wolve Pack";
+            enemies[3] = "Goblin Knight";
+            enemies[4] = "Scary Stranger";
+            //assign new values to encounters;
+            encounters[0] = "Battle";
+            encounters[1] = "Battle";
+            encounters[2] = "Battle";
+            encounters[3] = "Rest";
+            encounters[4] = "Shop";
+            //fully health the player
+            player.hp = player.maxHp;
+        }else if(player.xp >= 100 && act == 3){
+            act = 4;
+            place = 3;
+            Story.printThirdOutro();
+            player.chooseTrait();
+            Story.printFourthIntro();
+            //fully health the player
+            player.hp = player.maxHp;
+            //calling the final battle
+            //finalBattle();
+        }
+    }
+
+    //method to calculate a random encounter
+    public static void randomEncounter(){
+        //random number between 0 and lenght of encounters array
+        int encounter = (int)(Math.random()* encounters.length);
+        //calling the respective methods
+        if(encounters[encounter].equals("Battle")){
+            //randomBattle();
+        }else if(encounters[encounter].equals("Rest")){
+            //takeRest();
+        }else{
+            //shop();
+        }
+    }
+
     //method to continue the journey
     public static void continueJourney(){
-
+        //check if act must be increased
+        checkAct();
+        //check if game isnt in last act
+        if(act != 4){
+            randomEncounter();
+        }
     }
 
     //printing out the most important information about the player character
