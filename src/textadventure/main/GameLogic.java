@@ -105,7 +105,7 @@ public class GameLogic {
 
     //method that changes the games values based on player xp
     public static void checkAct(){
-        if(player.xp == 0 && act == 1){
+        if(player.xp >= 0 && act == 1){
             //increment act and place
             act = 2;
             place = 1;
@@ -115,7 +115,6 @@ public class GameLogic {
             player.chooseTrait();
             //Story
             Story.printSecondIntro();
-            player.xp += 50;
         }else if(player.xp >= 50 && act == 2){
             act = 3;
             place = 2;
@@ -136,7 +135,6 @@ public class GameLogic {
             encounters[4] = "Shop";
             //fully health the player
             player.hp = player.maxHp;
-            player.xp += 50;
         }else if(player.xp >= 100 && act == 3){
             act = 4;
             place = 3;
@@ -156,7 +154,7 @@ public class GameLogic {
         int encounter = (int)(Math.random()* encounters.length);
         //calling the respective methods
         if(encounters[encounter].equals("Battle")){
-            //randomBattle();
+            randomBattle();
         }else if(encounters[encounter].equals("Rest")){
             //takeRest();
         }else{
@@ -236,7 +234,7 @@ public class GameLogic {
                     }else{
                         printHeading("You didn't manage to escape");
                         int dmgTook = enemy.attack();
-                        System.out.println("In your hurry you took 0 " + dmgTook + " damage!");
+                        System.out.println("In your hurry you took " + dmgTook + " damage!");
                         anythingToContinue();
                         //check if the player still alive
                         if(player.hp <= 0)
