@@ -15,7 +15,7 @@ public class GameLogic {
 
     //Story elements
     public static int place = 0, act = 1;
-    public static String[] places = {"Wandering Plains", " Eldoria Town Square", "The Hidden Sanctuary, Draken's Frontier Fortress"};
+    public static String[] places = {"Wandering Plains", "Eldoria Town Square", "The Hidden Sanctuary, Draken's Frontier Fortress"};
 
     // method to get user input from console
     public static int readInt(String prompt, int userChoices) {
@@ -115,7 +115,7 @@ public class GameLogic {
             player.chooseTrait();
             //Story
             Story.printSecondIntro();
-        }else if(player.xp >= 50 && act == 2){
+        }else if(player.xp >= 10 && act == 2){
             act = 3;
             place = 2;
             Story.printSecondOutro();
@@ -135,7 +135,7 @@ public class GameLogic {
             encounters[4] = "Shop";
             //fully health the player
             player.hp = player.maxHp;
-        }else if(player.xp >= 100 && act == 3){
+        }else if(player.xp >= 20 && act == 3){
             act = 4;
             place = 3;
             Story.printThirdOutro();
@@ -144,7 +144,7 @@ public class GameLogic {
             //fully health the player
             player.hp = player.maxHp;
             //calling the final battle
-            //finalBattle();
+            finalBattle();
         }
     }
 
@@ -156,9 +156,12 @@ public class GameLogic {
         if(encounters[encounter].equals("Battle")){
             randomBattle();
         }else if(encounters[encounter].equals("Rest")){
-            //takeRest();
-        }else{
-            //shop();
+            takeRest();
+        }else if(encounters[encounter].equals("Shop")){
+            shop();
+        }
+        else{
+            continueJourney();
         }
     }
 
@@ -169,6 +172,16 @@ public class GameLogic {
         anythingToContinue();
         //creating new enemy
         battle(new Enemy(enemies[(int)(Math.random()*enemies.length)], player.xp));
+    }
+
+    //methods that gets called when the player is dead
+    public static void playerDied(){
+        clearConsole();
+        printHeading("You died...");
+        System.out.println("You earned " + player.xp + " XP on your journey. Try to earn more next time!");
+        System.out.println("Thank you for playing my game.");
+        anythingToContinue();
+        isRunning = false;
     }
 
     //The main battle method
@@ -216,11 +229,41 @@ public class GameLogic {
                     printHeading("You defeated the " + enemy.name + "!");
                     player.xp += enemy.xp;
                     System.out.println("You earned " + enemy.xp + " XP!");
+                    //random drops
+                    boolean addRest = (Math.random()*5 + 1 <= 2.25);
+                    int goldEarned = (int)(Math.random()*enemy.xp);
+                    if(addRest){
+                        player.restsLeft++;
+                        System.out.println("You earned the the chance to get an additional rest!");
+                    }
+                    if(goldEarned > 0){
+                        player.gold += goldEarned;
+                        System.out.println("You collect " + goldEarned + " gold from the " + enemy.name + "'s corpse!");
+                    }
                     anythingToContinue();
                     break;
                 }
             }else if(input == 2){
-                //use portion (tbt)
+                //use portion
+                clearConsole();
+                if (player.pots > 0 && player.hp < player.maxHp){
+                    //player CAN take a potion
+                    //make sure player wants to drink the potion
+                    printHeading("Do you want to drink a potion? (" + player.pots + " left).");
+                    System.out.println("(1) Yes\n(2) No, maybe later");
+                    input = readInt("-> ", 2 );
+                    if (input == 1){
+                        //player took the potion
+                        player.hp = player.maxHp;
+                        clearConsole();
+                        printHeading("You drank a magic potion. It restored your health back to " + player.maxHp);
+                        anythingToContinue();
+                    }
+                }else {
+                    //player CANT take a potion
+                    printHeading("You don't have any potions or you're at full health.");
+                    anythingToContinue();
+                }
             }else{
                 //Run away
                 clearConsole();
@@ -235,6 +278,7 @@ public class GameLogic {
                         printHeading("You didn't manage to escape");
                         int dmgTook = enemy.attack();
                         System.out.println("In your hurry you took " + dmgTook + " damage!");
+                        player.hp -= dmgTook;
                         anythingToContinue();
                         //check if the player still alive
                         if(player.hp <= 0)
@@ -246,14 +290,6 @@ public class GameLogic {
                 }
             }
         }
-    }
-
-    //methods that gets called when the player is dead
-    public static void playerDied(){
-        clearConsole();
-        printHeading("You died...");
-        printHeading("You earned " + player.xp + " XP on your journey. Try to earn more next time!");
-        System.out.println("Thank you for playing my game.");
     }
 
     //method to continue the journey
@@ -272,7 +308,11 @@ public class GameLogic {
         printHeading("CHARACTER INFO");
         System.out.println(player.name + "\tHP: " + player.hp + "/" + player.maxHp);
         printSeperator(20);
-        System.out.println("XP: " + player.xp);
+        //player xp and gold
+        System.out.println("XP: " + player.xp + "\tGold: " + player.gold);
+        printSeperator(20);
+        //pots
+        System.out.println("Numbers of Potions: " + player.pots);
         printSeperator(20);
 
         //printing the chosen traits
@@ -286,6 +326,67 @@ public class GameLogic {
         anythingToContinue();
     }
 
+    //shopping / encountering a travelling trader
+    public static void shop(){
+        clearConsole();
+        printHeading("SHOP");
+        printHeading("You meet a mysterious stranger. \nHe offers you someting:");
+        int price = (int)(Math.random()*(10 + player.pots*3) + 10 + player.pots);
+        System.out.println("- Magic Potion: " + price + " gold.");
+        printSeperator(20);
+        //ask the player to buy one
+        System.out.println("Do you want to buy one?\n(1) Yes!\n(2) No, thanks maybe later.");
+        int input = readInt("-> ", 2);
+        //check if player wants to buy
+        if(input == 1){
+            clearConsole();
+            //check if player has enough gold
+            if(player.gold >= price){
+                printHeading("You bought a magical potion for " + price + "gold.");
+                player.pots++;
+                player.gold -= price;
+            }else{
+                printHeading("You don't have enough gold to buy the potion...");
+                anythingToContinue();
+            }
+        }
+    }
+
+    //taking a rest
+    public static void takeRest(){
+        clearConsole();
+        if(player.restsLeft >= 1){
+            System.out.println("REST");
+            printHeading("Do you want to take a rest? (" + player.restsLeft + " rest(s) left).");
+            System.out.println("(1) Yes\n(2) No, not now.");
+            int input = readInt("-> ", 2);
+            if(input == 1){
+                //player takes rest
+                clearConsole();
+                if(player.hp < player.maxHp){
+                    int hpRestored = (int)(Math.random()* (player.xp/4 + 1) + 10);
+                    player.hp += hpRestored;
+                    if(player.hp > player.maxHp)
+                        player.hp = player.maxHp;
+                    System.out.println("You took a rest and restored up to " + hpRestored + " health.");
+                    System.out.println("You're now at " + player.hp + "/" + player.maxHp + " health.");
+                    player.restsLeft--;
+                    anythingToContinue();
+                }
+            }else{
+                clearConsole();
+                System.out.println("You are on full health or you don't have rests left!");
+                anythingToContinue();
+            }
+        }
+    }
+
+    //the final (last) battle of the entire game
+    public static void finalBattle(){
+        battle(new Enemy("THE EVIL EMPEROR DRAKEN", 300));
+        Story.printEnd(player);
+        isRunning = false;
+    }
 
     //printing the main menu
     public static void printMenu(){
@@ -308,7 +409,8 @@ public class GameLogic {
             }else if(input == 2){
                 characterInfo();
             }else{
-                isRunning = false;
+                //isRunning = false;
+                continueJourney();
             }
         }
     }
