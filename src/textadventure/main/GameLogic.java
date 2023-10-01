@@ -105,7 +105,7 @@ public class GameLogic {
 
     //method that changes the games values based on player xp
     public static void checkAct(){
-        if(player.xp >= 10 && act == 1){
+        if(player.xp == 0 && act == 1){
             //increment act and place
             act = 2;
             place = 1;
@@ -115,6 +115,7 @@ public class GameLogic {
             player.chooseTrait();
             //Story
             Story.printSecondIntro();
+            player.xp += 50;
         }else if(player.xp >= 50 && act == 2){
             act = 3;
             place = 2;
@@ -135,6 +136,7 @@ public class GameLogic {
             encounters[4] = "Shop";
             //fully health the player
             player.hp = player.maxHp;
+            player.xp += 50;
         }else if(player.xp >= 100 && act == 3){
             act = 4;
             place = 3;
@@ -160,6 +162,100 @@ public class GameLogic {
         }else{
             //shop();
         }
+    }
+
+    //creating a random battle
+    public static void randomBattle(){
+        clearConsole();
+        printHeading("You encountered an evil minded creature. You'll have to fight it!");
+        anythingToContinue();
+        //creating new enemy
+        battle(new Enemy(enemies[(int)(Math.random()*enemies.length)], player.xp));
+    }
+
+    //The main battle method
+    public static void battle(Enemy enemy){
+        while(true){
+            clearConsole();
+            printHeading(enemy.name + "\nHP: " + enemy.hp + "/" + enemy.maxHp);
+            printHeading(player.name + "\nHP: " + player.hp + "/" + player.maxHp);
+            System.out.println("Choose an action:");
+            printSeperator(20);
+            System.out.println("(1) Fight\n(2) Use Potion\n(3) Run Away");
+            int input = readInt("-> ", 3);
+            //react accordingly to player input
+            if(input == 1){
+                //Fight
+                //calculate dmg and dmgTook (dmg enemy deals to player)
+                int dmg = player.attack() - enemy.defend();
+                int dmgTook = enemy.attack() - player.defend();
+                //check that dmg and dmgTook isnt negative
+                if(dmgTook < 0){
+                    //add some dmg if player defends well
+                    dmg -= dmgTook/2;
+                    dmgTook = 0;
+                }
+                if(dmg < 0){
+                    dmg = 0;
+                }
+                //deal damage to both parties
+                player.hp -= dmgTook;
+                enemy.hp -= dmg;
+                //print the info of this battle round
+                clearConsole();
+                printHeading("BATTLE");
+                System.out.println("You dealt " + dmg + " damage to the " + enemy.name + ".");
+                printSeperator(15);
+                System.out.println("The " + enemy.name + " dealt " + dmgTook + " damage to you.");
+                anythingToContinue();
+                //check if the player is still alive or dead
+                if(player.hp <= 0){
+                    playerDied();
+                    break;
+                }else if(enemy.hp <= 0){
+                    //player won battle
+                    clearConsole();
+                    printHeading("You defeated the " + enemy.name + "!");
+                    player.xp += enemy.xp;
+                    System.out.println("You earned " + enemy.xp + " XP!");
+                    anythingToContinue();
+                    break;
+                }
+            }else if(input == 2){
+                //use portion (tbt)
+            }else{
+                //Run away
+                clearConsole();
+               //check that player isnt in last act(final boss battle)
+                if(act != 4) {
+                    //chance of 35% to escape
+                    if(Math.random()*10 + 1 <= 3.5){
+                        printHeading("You ran away from the " + enemy.name + "!");
+                        anythingToContinue();
+                        break;
+                    }else{
+                        printHeading("You didn't manage to escape");
+                        int dmgTook = enemy.attack();
+                        System.out.println("In your hurry you took 0 " + dmgTook + " damage!");
+                        anythingToContinue();
+                        //check if the player still alive
+                        if(player.hp <= 0)
+                            playerDied();
+                    }
+                }else{
+                    printHeading("YOU CAN'T ESCAPE FROM THE BOSS!");
+                    anythingToContinue();
+                }
+            }
+        }
+    }
+
+    //methods that gets called when the player is dead
+    public static void playerDied(){
+        clearConsole();
+        printHeading("You died...");
+        printHeading("You earned " + player.xp + " XP on your journey. Try to earn more next time!");
+        System.out.println("Thank you for playing my game.");
     }
 
     //method to continue the journey

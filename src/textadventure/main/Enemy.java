@@ -15,11 +15,11 @@ public class Enemy extends Character{
     //Enemy specific attack and defence calculations
     @Override
     public int attack() {
-        return 0;
+        return (int) (Math.random()*(playerXp/4 + 1) + xp/4 + 3);
     }
 
     @Override
-    public int defend() {
-        return 0;
+    public int defend(){
+        return (int) (Math.random()*(playerXp/4 + 1) + xp/4 + 3);
     }
 }
